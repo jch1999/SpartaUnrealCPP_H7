@@ -26,8 +26,8 @@ public:
 	void Move(const FInputActionValue& Value);
 	void Turn(const FInputActionValue& Value);
 
-private:
-	void UpdateVelocity(float DeltaTime);
+protected:
+	virtual void UpdateVelocity(float DeltaTime);
 
 protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Components")
