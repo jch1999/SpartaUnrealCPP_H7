@@ -26,6 +26,9 @@ public:
 	void Move(const FInputActionValue& Value);
 	void Turn(const FInputActionValue& Value);
 
+private:
+	void UpdateVelocity(float DeltaTime);
+
 protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Components")
 	UCapsuleComponent* CapsuleComponent;
@@ -44,6 +47,10 @@ protected:
 	float Acceleration;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
 	float Deceleration;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
+	float StopThreshold; // 무시 가능 범위
+
+	FVector2D MoveInput;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Look")
 	float LookSpeed;

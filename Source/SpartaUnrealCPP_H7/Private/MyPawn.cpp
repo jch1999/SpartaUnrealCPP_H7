@@ -54,17 +54,28 @@ AMyPawn::AMyPawn()
 		CameraComp->bUsePawnControlRotation = false;
 	}
 
+	MoveInput = FVector2D::ZeroVector;
+	MaxSpeed = 600.0f;
+	Acceleration = 2000.0f;
+	Deceleration = 2500.0f;
+	StopThreshold = 5.f;
 	LookSpeed = 1.0f;
-}
-
-void AMyPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AMyPawn::BeginPlay()
 {
 	Super::BeginPlay();
+}
+
+void AMyPawn::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	UpdateVelocity(DeltaTime);
+	if (!Velocity.IsNearlyZero())
+	{
+		AddActorLocalOffset(Velocity * DeltaTime, true);
+	}
 }
 
 void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -89,15 +100,7 @@ void AMyPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AMyPawn::Move(const FInputActionValue& Value)
 {
-	const FVector2D MoveValue = Value.Get<FVector2D>();
-	if (!FMath::IsNearlyZero(MoveValue.X))
-	{
-		AddActorLocalOffset(GetActorForwardVector() * MoveValue.X);
-	}
-	if (!FMath::IsNearlyZero(MoveValue.Y))
-	{
-		AddActorLocalOffset(GetActorRightVector() * MoveValue.Y);
-	}
+	MoveInput = Value.Get<FVector2D>();
 }
 
 void AMyPawn::Turn(const FInputActionValue& Value)
@@ -106,12 +109,37 @@ void AMyPawn::Turn(const FInputActionValue& Value)
 	if (LookValue.IsNearlyZero()) return;
 
 	AddActorLocalRotation(FRotator(0, LookValue.X, 0.0f) * LookSpeed);
+	
 	SpringArmComp->AddLocalRotation(FRotator(LookValue.Y * LookSpeed, 0, 0));
 	FRotator SpringArmRotation = SpringArmComp->GetRelativeRotation();
-	SpringArmComp->SetRelativeRotation(FRotator(
-		FMath::Clamp(SpringArmRotation.Pitch,0,80.0f),
-		SpringArmRotation.Yaw,
-		0.0f
-	));
+	SpringArmRotation.Pitch = FMath::ClampAngle(SpringArmRotation.Pitch, -60.f, 60.f);
+	SpringArmComp->SetRelativeRotation(SpringArmRotation);
+}
+
+void AMyPawn::UpdateVelocity(float DeltaTime)
+{
+	if (!MoveInput.IsNearlyZero())
+	{
+		// GetClampedToMaxSize - 백터의 크기가 일정 값을 넘지못하게 제한하는 함수
+		const FVector LocalAccel = FVector(MoveInput.X, MoveInput.Y, 0.f).GetClampedToMaxSize(1.f) * Acceleration;
+		Velocity += LocalAccel * DeltaTime;
+	}
+	else
+	{
+		const float Speed = Velocity.Size();
+		const float NewSpeed = FMath::Max(Speed - Deceleration * DeltaTime, 0.f);
+
+		// KINDA_SMALL_NUMBER : 0으로 정규화하다가 이상해지는 걸 피하기 위한 안전장치
+		Velocity = (Speed > KINDA_SMALL_NUMBER)
+			? Velocity.GetSafeNormal() * NewSpeed
+			: FVector::ZeroVector;
+	}
+
+	Velocity = Velocity.GetClampedToMaxSize(MaxSpeed);
+	if (Velocity.Size() < StopThreshold)
+	{
+		Velocity = FVector::ZeroVector;
+	}
+	MoveInput = FVector2D::ZeroVector;
 }
 
