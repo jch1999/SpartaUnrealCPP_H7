@@ -23,11 +23,13 @@ protected:
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+protected:
+	UFUNCTION()
 	void Move(const FInputActionValue& Value);
-	void Turn(const FInputActionValue& Value);
+	UFUNCTION()
+	virtual void Turn(const FInputActionValue& Value);
 
-private:
-	void UpdateVelocity(float DeltaTime);
+	virtual void UpdateVelocity(float DeltaTime);
 
 protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Components")
