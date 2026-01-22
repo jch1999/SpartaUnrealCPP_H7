@@ -23,10 +23,12 @@ protected:
 public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	void Move(const FInputActionValue& Value);
-	void Turn(const FInputActionValue& Value);
-
 protected:
+	UFUNCTION()
+	void Move(const FInputActionValue& Value);
+	UFUNCTION()
+	virtual void Turn(const FInputActionValue& Value);
+
 	virtual void UpdateVelocity(float DeltaTime);
 
 protected:
