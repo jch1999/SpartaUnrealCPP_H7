@@ -75,26 +75,42 @@ void AMyDronePawn::OnRoll(const FInputActionValue& Value)
 
 void AMyDronePawn::UpdateVelocity(float DeltaTime)
 {
-	// X,Y 속도 처리
-	Super::UpdateVelocity(DeltaTime);
-
-	// Z 속도 처리
-	if (FMath::IsNearlyEqual(ZInput, 1.0f))
+	FVector Accel = FVector::ZeroVector;
+	if (!MoveInput.IsNearlyZero())
 	{
-		const FVector ZAccel = FVector(0.f, 0.f, ZAcceleration);
-		Velocity += ZAccel*DeltaTime;
-	}
-	else if (FMath::IsNearlyEqual(ZInput, -1.0f))
-	{
-		const FVector ZAccel = FVector(0.f, 0.f, -ZAcceleration);
-		Velocity += ZAccel * DeltaTime;
+		Accel = FVector(MoveInput.X, MoveInput.Y, 0.f).GetClampedToMaxSize(1.f) * Acceleration;
 	}
 	else
 	{
-		float NewZ= FMath::Max(Velocity.Z - Deceleration * DeltaTime, 0.f);
-		Velocity.Z = NewZ;
+		FVector2D XY(Velocity.X, Velocity.Y);
+		const float XYSpeed = XY.Size();
+		const float NewSpeed = FMath::Max(XYSpeed - Deceleration * DeltaTime, 0.f);
+
+		// KINDA_SMALL_NUMBER : 0으로 정규화하다가 이상해지는 걸 피하기 위한 안전장치
+		XY = (XYSpeed > KINDA_SMALL_NUMBER)
+			? XY.GetSafeNormal() * NewSpeed
+			: FVector2D::ZeroVector;
+		Velocity.X = XY.X;
+		Velocity.Y = XY.Y;
 	}
 
+	if (FMath::IsNearlyEqual(ZInput, 0.0f))
+	{
+		float NewZ = FMath::FInterpTo(Velocity.Z, 0.f, DeltaTime, Deceleration);
+		Velocity.Z = NewZ;
+	}
+	else
+	{
+		Accel += FVector(0.f, 0.f, FMath::IsNearlyEqual(ZInput, 1.0f) ? ZAcceleration : -ZAcceleration);
+	}
+	Velocity += Accel * DeltaTime;
+
+	Velocity = Velocity.GetClampedToMaxSize(MaxSpeed);
+	if (Velocity.Size() < StopThreshold)
+	{
+		Velocity = FVector::ZeroVector;
+	}
+	MoveInput = FVector2D::ZeroVector;
 	ZInput = 0.0f;
 }
 
