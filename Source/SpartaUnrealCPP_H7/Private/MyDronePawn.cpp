@@ -13,6 +13,7 @@ AMyDronePawn::AMyDronePawn()
 	}
 
 	RollSpeed = 10.0f;
+	bUseGravity = false;
 }
 
 void AMyDronePawn::BeginPlay()

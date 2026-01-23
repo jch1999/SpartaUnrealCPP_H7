@@ -60,6 +60,8 @@ AMyPawn::AMyPawn()
 	Deceleration = 2500.0f;
 	StopThreshold = 5.f;
 	LookSpeed = 1.0f;
+	GravityScale = -9.8f;
+	bUseGravity = true;
 }
 
 void AMyPawn::BeginPlay()
@@ -72,6 +74,8 @@ void AMyPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateVelocity(DeltaTime);
+	AddGravity(DeltaTime);
+
 	if (!Velocity.IsNearlyZero())
 	{
 		AddActorLocalOffset(Velocity * DeltaTime, true);
@@ -141,5 +145,12 @@ void AMyPawn::UpdateVelocity(float DeltaTime)
 		Velocity = FVector::ZeroVector;
 	}
 	MoveInput = FVector2D::ZeroVector;
+}
+
+void AMyPawn::AddGravity(float DeltaTime)
+{
+	if (!bUseGravity) return;
+
+	Velocity.Z += GravityScale * DeltaTime;
 }
 

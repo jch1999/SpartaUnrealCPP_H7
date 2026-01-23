@@ -30,6 +30,7 @@ protected:
 	virtual void Turn(const FInputActionValue& Value);
 
 	virtual void UpdateVelocity(float DeltaTime);
+	virtual void AddGravity(float DeltaTime);
 
 protected:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Components")
@@ -52,8 +53,13 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
 	float StopThreshold; // 무시 가능 범위
 
-	FVector2D MoveInput;
-
 	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Look")
 	float LookSpeed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
+	float GravityScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gravity")
+	bool bUseGravity;
+
+	FVector2D MoveInput;
 };
